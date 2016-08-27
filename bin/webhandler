@@ -1,0 +1,66 @@
+#!/bin/phantomjs
+
+var page = require('webpage').create(),
+	system = require('system');
+
+var EXIT = function(){
+	phantom.exit();
+};
+
+var SUCCESS = "success";
+
+page.onConsoleMessage = function(message){
+	console.log(message);
+};
+
+var args = system.args;
+var USAGE = "Usage:\n\t" + args[0] + " http://www.example.com [snapshot_dir]";
+if(args.length < 2){
+	console.log(USAGE);
+	EXIT();
+}
+
+var uri = args[1];
+var snapshot_dir = null;
+
+if(args.length > 2){
+	snapshot_dir = args[2];
+}
+
+page.open(uri, function(status){
+	if(SUCCESS == status){
+		var property = page.evaluate(function(){
+			var getMeta = function(name){
+				var metas = document.getElementsByTagName('meta');
+				var result = "";
+
+				for(var i = 0; i < metas.length; i++){
+					var it = metas[i];
+					if(it.name == name){
+						result = it.content;
+						break;
+					}	
+				};
+
+				return result;
+			};
+
+			return {
+				title:document.title,
+				keywords:getMeta('keywords'),
+				description:getMeta('description')
+			};
+		});	
+
+		if(snapshot_dir != null){
+			var filepath = snapshot_dir + (new Date).getTime() + "/" + Math.round(Math.random() * 100000) + ".png";
+			var status = page.render(filepath)
+			if(status){
+				property.snapshot = filepath;
+			}
+		}
+
+		console.log(JSON.stringify(property));
+		EXIT();
+	}
+});
