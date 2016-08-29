@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"os"
 	"os/exec"
 	"strings"
 	"sync"
@@ -14,10 +13,6 @@ import (
 
 const (
 	WEBHANDLER = "webhandler"
-)
-
-var (
-	SS_DIR string
 )
 
 func HandleCreate(w http.ResponseWriter, r *http.Request, logger *log.Logger) {
@@ -38,6 +33,8 @@ func HandleCreate(w http.ResponseWriter, r *http.Request, logger *log.Logger) {
 		responseJson(w, false, fmt.Sprintf("%v", err))
 		return
 	}
+
+	uris = append(uris, target)
 
 	go func() {
 		for {
@@ -64,16 +61,13 @@ func HandleCreate(w http.ResponseWriter, r *http.Request, logger *log.Logger) {
 
 	wg.Wait()
 	close(outputch)
-	cwd, _ := os.Getwd()
 	data := map[string]interface{}{
-		"cwd":  cwd,
-		"list": list,
+		"prefix": SS_DIR,
+		"list":   list,
 	}
 	responseJson(w, true, "", data)
 }
 
 func init() {
-	cwd, _ := os.Getwd()
-	SS_DIR = cwd + "/snapshot"
-	handlers["create"] = HandleCreate
+	handlers["/create"] = HandleCreate
 }
