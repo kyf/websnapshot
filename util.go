@@ -5,8 +5,13 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"os/exec"
 	"regexp"
 	"strings"
+)
+
+const (
+	WEBHANDLER = "webhandler"
 )
 
 func fillHost(path []byte, host string) string {
@@ -72,4 +77,13 @@ func responseJson(w http.ResponseWriter, status bool, message string, data ...in
 
 	jsonResult, _ := json.Marshal(result)
 	w.Write(jsonResult)
+}
+
+func callWebHandler(target, ss_dir string) ([]byte, error) {
+	cmd := exec.Command(WEBHANDLER, target, ss_dir)
+	output, err := cmd.Output()
+	if err != nil {
+		return nil, err
+	}
+	return output, nil
 }

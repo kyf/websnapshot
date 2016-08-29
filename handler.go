@@ -6,13 +6,9 @@ import (
 	"net/http"
 	"os/exec"
 	"strings"
-	"sync"
+	//"sync"
 
 	"github.com/fatih/color"
-)
-
-const (
-	WEBHANDLER = "webhandler"
 )
 
 func HandleCreate(w http.ResponseWriter, r *http.Request, logger *log.Logger) {
@@ -26,7 +22,7 @@ func HandleCreate(w http.ResponseWriter, r *http.Request, logger *log.Logger) {
 	list := make([]string, 0)
 	outputch := make(chan string, 1)
 
-	var wg sync.WaitGroup
+	//var wg sync.WaitGroup
 	uris, err := getURI(target)
 	if err != nil {
 		logger.Print(color.RedString("getURI error: %v", err))
@@ -45,21 +41,22 @@ func HandleCreate(w http.ResponseWriter, r *http.Request, logger *log.Logger) {
 		}
 	}()
 	for _, uri := range uris {
-		wg.Add(1)
-		go func() {
-			cmd := exec.Command(WEBHANDLER, uri, SS_DIR)
-			output, err := cmd.Output()
-			if err != nil {
-				logger.Print(color.RedString("[%s] error:%v", uri, err))
-				return
-			}
-			outputch <- string(output)
-			logger.Printf("[%v] success!", uri)
-			wg.Done()
-		}()
+		//wg.Add(1)
+		//go func() {
+		cmd := exec.Command(WEBHANDLER, uri, SS_DIR)
+		output, err := cmd.Output()
+		if err != nil {
+			logger.Print(color.RedString("[%s] error:%v", uri, err))
+			return
+		}
+		outputch <- string(output)
+		logger.Printf("[%v] success!", uri)
+		logger.Print(string(output))
+		//wg.Done()
+		//}()
 	}
 
-	wg.Wait()
+	//wg.Wait()
 	close(outputch)
 	data := map[string]interface{}{
 		"prefix": SS_DIR,

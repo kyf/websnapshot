@@ -10,7 +10,27 @@ func Test_getURI(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	for _, uri := range uris {
-		log.Print(uri)
+
+	ss_dir := "/home/kyf/demo/snapshot/"
+	for _, target := range uris {
+
+		output, err := callWebHandler(target, ss_dir)
+		if err != nil {
+			t.Fatal(err)
+		}
+		log.Print(string(output))
+
 	}
 }
+
+/*
+func Test_callWebHandler(t *testing.T) {
+	target, ss_dir := "http://im2.6renyou.com:6060/login", "/home/kyf/demo/snapshot/"
+
+	output, err := callWebHandler(target, ss_dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	log.Print(string(output))
+}
+*/

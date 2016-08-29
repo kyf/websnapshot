@@ -26,14 +26,18 @@
 	.createbar .enter{
 		float:left;
 		margin-right:10px;
-		padding-top:5px;
+		padding-top:20px;
 	}
 </style>
 <body>
 <div class="createbar">
 	<div class="logo"><img src="http://www.6renyou.com/statics/img/logo.png"/></div>
-	<div class="enter"><input type="text" id="target"/></div>
-	<div><button type="button" class="btn btn-primary" id="submitbt">生成快照</button></div>
+	<div class="enter">
+		<div class="input-append">
+			<input class="span2" style="width:450px;" id="target" type="text">
+		    <button class="btn" type="button"  id="submitbt">生成快照</button>
+		</div>
+	</div>
 </div>
 
 
