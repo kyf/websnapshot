@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"os/exec"
 	"strings"
 	//"sync"
 
@@ -40,11 +39,13 @@ func HandleCreate(w http.ResponseWriter, r *http.Request, logger *log.Logger) {
 			}
 		}
 	}()
+
+	uris = uris[0:2]
+
 	for _, uri := range uris {
 		//wg.Add(1)
 		//go func() {
-		cmd := exec.Command(WEBHANDLER, uri, SS_DIR)
-		output, err := cmd.Output()
+		output, err := callWebHandler(uri, SS_DIR)
 		if err != nil {
 			logger.Print(color.RedString("[%s] error:%v", uri, err))
 			return
