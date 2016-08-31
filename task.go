@@ -1,7 +1,11 @@
 package main
 
 import (
+	"encoding/json"
 	"errors"
+	"log"
+	"strings"
+	"sync"
 	"time"
 )
 
@@ -11,6 +15,10 @@ type State struct {
 
 func NewState(state bool) State {
 	return State{state}
+}
+
+func (this *State) isRun() bool {
+	return this.state
 }
 
 func (this *State) String() string {
@@ -31,14 +39,46 @@ func NewTask(target string) Task {
 	return Task{id: id, target: target}
 }
 
-type TaskManager struct {
-	list  []Task
-	state State
-	exit  chan int
+type HandlerResponse struct {
+	Title       string `json:"title"`
+	Keywords    string `json:"keywords"`
+	Description string `json:"description"`
+	Snapshot    string `json:"snapshot"`
 }
 
-func NewTaskManager() *TaskManager {
-	return &TaskManager{make([]Task, 0), NewState(false), make(chan int, 1)}
+type TaskManager struct {
+	list     []Task
+	state    State
+	exit     chan int
+	ssDir    string
+	response map[int64][]HandlerResponse
+	sync.Mutex
+}
+
+func NewTaskManager(ssDir string) *TaskManager {
+	return &TaskManager{list: make([]Task, 0), state: NewState(false), exit: make(chan int, 1), ssDir: ssDir, response: make(map[int64][]HandlerResponse, 0)}
+}
+
+func (this *TaskManager) push(it Task) {
+	this.Lock()
+	defer this.Unlock()
+
+	this.list = append(this.list, it)
+}
+
+func (this *TaskManager) pop() (it Task, ok bool) {
+	if len(this.list) == 0 {
+		ok = false
+		return
+	}
+
+	this.Lock()
+	defer this.Unlock()
+	length := len(this.list)
+	it = this.list[length-1]
+	this.list = this.list[:length-1]
+	ok = true
+	return
 }
 
 func (this *TaskManager) Run(taskCh <-chan Task) error {
@@ -72,7 +112,31 @@ func (this *TaskManager) Run(taskCh <-chan Task) error {
 	}(outCh)
 
 	for it := range outCh {
-		callWebHandler()
+		uris, err := getURI(it.target)
+		if err != nil {
+			log.Printf("getURI error:%v", err)
+			continue
+		}
+		uris = append(uris, it.target)
+		reslist := make([]HandlerResponse, 0)
+		for _, uri := range uris {
+			output, err := callWebHandler(uri, this.ssDir)
+
+			if err != nil {
+				log.Printf("callWebHandler error:%v", err)
+				continue
+			}
+			var res HandlerResponse
+			err = json.Unmarshal(output, &res)
+			if err != nil {
+				log.Printf("json.Unmarshal output error:%v, origin is [%s]", err, string(output))
+				continue
+			}
+			res.Snapshot = strings.Replace(res.Snapshot, this.ssDir, "", -1)
+			reslist = append(reslist, res)
+		}
+		this.response[it.id] = reslist
+		log.Printf("task[%v] has complete!", it.target)
 	}
 
 	return nil

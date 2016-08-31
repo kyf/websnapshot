@@ -9,9 +9,11 @@ var EXIT = function(){
 
 var SUCCESS = "success";
 
+/*
 page.onConsoleMessage = function(message){
 	console.log(message);
 };
+*/
 
 var args = system.args;
 var USAGE = "Usage:\n\t" + args[0] + " http://www.example.com [snapshot_dir]";
