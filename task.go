@@ -134,6 +134,7 @@ func (this *TaskManager) Run(taskCh <-chan Task) error {
 			}
 			res.Snapshot = strings.Replace(res.Snapshot, this.ssDir, "", -1)
 			reslist = append(reslist, res)
+			log.Printf("[%s] has finished!", uri)
 		}
 		this.response[it.id] = reslist
 		log.Printf("task[%v] has complete!", it.target)

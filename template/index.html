@@ -95,6 +95,32 @@ String.prototype.replaceTpl = function(data){
 }
 
 
+var loadfn = function(taskid){ 
+	var self = arguments.callee;
+	$.ajax({
+		url:'/process',
+		type:'POST',
+		dataType:'json',
+		data:{
+			taskid:taskid
+		},
+		success:function(data){
+			if(data.status){
+				$('#total').text('共生成快照'+data.data.length+'条目');
+				$.each(data.data, function(_, it){
+						$('.list_container').append(tpl.replaceTpl(it));
+					});
+			}else{
+				if(data.message == 'loading'){
+					setTimeout(function(){self(taskid);}, 3000);	
+				}else{
+					alert(data.message);
+				}
+			}
+		}
+	});
+}
+
 
 	$(function(){
 		$('#submitbt').click(function(){
@@ -108,27 +134,7 @@ String.prototype.replaceTpl = function(data){
 						'success':function(data){
 							if(data.status){
 								var taskid = data.data.taskid;
-								$.ajax({
-										url:'/process',
-										type:'POST',
-										dataType:'json',
-										data:{
-											taskid:taskid
-										},
-										success:function(data){
-											if(data.status){
-												$('#total').text('共生成快照'+data.data.length+'条目');
-												$.each(data.data, function(_, it){
-														$('.list_container').append(tpl.replaceTpl(it));
-													});
-											}else{
-												alert(data.message);
-											}
-										}
-									});
-
-
-
+								loadfn(taskid);
 							}else{
 								alert(data.message);
 							}
