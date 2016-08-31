@@ -40,13 +40,11 @@ func main() {
 	taskch := make(chan Task, 1)
 
 	tm := NewTaskManager(SS_DIR)
-	err := tm.Run(taskch)
-	if err != nil {
-		log.Fatal(err)
-	}
+	go tm.Run(taskch)
 	defer tm.Stop()
 	m.Map(taskch)
 	m.Map(tm)
 
+	log.Print("server listen 5555...")
 	log.Fatal(http.ListenAndServe(":5555", m))
 }

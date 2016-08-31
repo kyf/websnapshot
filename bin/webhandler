@@ -9,11 +9,14 @@ var EXIT = function(){
 
 var SUCCESS = "success";
 
-/*
 page.onConsoleMessage = function(message){
-	console.log(message);
+	//console.log(message);
 };
-*/
+
+page.settings = {
+	javascriptEnabled:false,
+	loadImages:true
+};
 
 var args = system.args;
 var USAGE = "Usage:\n\t" + args[0] + " http://www.example.com [snapshot_dir]";
@@ -29,30 +32,39 @@ if(args.length > 2){
 	snapshot_dir = args[2];
 }
 
+var getProperty = function (html) {
+	if (!html) return { title: false, keywords: false, description: false };
+
+	var title = html.match(/\<title\>(.*?)\<\/title\>/)
+		, meta = html.match(/\<meta\s(.*?)\/?\>/g)
+		, description, keywords;
+
+	if (meta) {
+		for (var i = meta.length; i--;) {
+			if(meta[i].indexOf('name="description"') > -1 || meta[i].indexOf('name="Description"') > -1){
+				description = meta[i].match(/content\=\"(.*?)\"/)[1];
+			}
+			if(meta[i].indexOf('name="keywords"') > -1 || meta[i].indexOf('name="Keywords"') > -1){
+				keywords = meta[i].match(/content\=\"(.*?)\"/)[1];
+			}
+		}
+	}
+
+	(title && title[1] !== '') ? (title = title[1]) : (title = 'No Title');
+	keywords || (keywords = '');
+	description || (description = '');
+
+	return {
+		title: title,
+		keywords: keywords,
+		description: description
+	};
+};
+
+
 page.open(uri, function(status){
 	if(SUCCESS == status){
-		var property = page.evaluate(function(){
-			var getMeta = function(name){
-				var metas = document.getElementsByTagName('meta');
-				var result = "";
-
-				for(var i = 0; i < metas.length; i++){
-					var it = metas[i];
-					if(it.name == name){
-						result = it.content;
-						break;
-					}	
-				};
-
-				return result;
-			};
-
-			return {
-				title:document.title,
-				keywords:getMeta('keywords'),
-				description:getMeta('description')
-			};
-		});	
+		var property = getProperty(page.content);
 
 		if(snapshot_dir != null){
 			var filepath = snapshot_dir + (new Date).getTime() + "/" + Math.round(Math.random() * 100000) + ".png";

@@ -35,10 +35,14 @@ func HandleProcess(w http.ResponseWriter, r *http.Request, logger *log.Logger, t
 		return
 	}
 
-	data := tm.response[_taskid]
-	responseJson(w, true, "", data)
+	if data, ok := tm.response[_taskid]; ok {
+		responseJson(w, true, "", data)
+	} else {
+		responseJson(w, false, "loading")
+	}
 }
 
 func init() {
 	handlers["/create"] = HandleCreate
+	handlers["/process"] = HandleProcess
 }

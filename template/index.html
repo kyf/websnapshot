@@ -28,6 +28,32 @@
 		margin-right:10px;
 		padding-top:20px;
 	}
+	.list_container{
+		margin-top:10px;
+	}
+	.list_container li {
+		width:800px;
+		list-style:none;
+		margin-left:50px;
+		clear:both;
+		padding-bottom:70px;
+	}
+	.left{
+		width:620px;
+		float:left;
+	}
+	.thumbnail{
+		float:right;
+	}
+	.title{
+		font-size:22px;
+	}
+	#total{
+		margin-left:50px;
+		color:#999;
+		font-size:12px;
+		margin-top:90px;
+	}
 </style>
 <body>
 <div class="createbar">
@@ -40,9 +66,8 @@
 	</div>
 </div>
 
-
-<div style="margin:50px;">
-
+<div id="total"></div>
+<div class="list_container">
 </div>
 </body>
 
@@ -50,6 +75,27 @@
 </html>
 <script src="http://www.6renyou.com/statics/js/jquery/jquery.min.js"></script>
 <script type="text/javascript">
+var tpl = [
+	'<li>',
+		'<div class="left">',
+		'<div class="title"><a href="">{title}</a></div>	',
+		'<div class="description">{description}</div>	',
+		'</div>',
+		'<div class="thumbnail"><img src="{snapshot}" /></div>',
+	'</li>'
+];
+tpl = tpl.join('');
+
+String.prototype.replaceTpl = function(data){
+	var reg = /{([^}]+)}/g;
+	var result = this.replace(reg, function(main, group){
+			return data[group] ? data[group] : '';
+		})
+	return result;
+}
+
+
+
 	$(function(){
 		$('#submitbt').click(function(){
 				$.ajax({
@@ -61,7 +107,28 @@
 						},
 						'success':function(data){
 							if(data.status){
-								//;
+								var taskid = data.data.taskid;
+								$.ajax({
+										url:'/process',
+										type:'POST',
+										dataType:'json',
+										data:{
+											taskid:taskid
+										},
+										success:function(data){
+											if(data.status){
+												$('#total').text('共生成快照'+data.data.length+'条目');
+												$.each(data.data, function(_, it){
+														$('.list_container').append(tpl.replaceTpl(it));
+													});
+											}else{
+												alert(data.message);
+											}
+										}
+									});
+
+
+
 							}else{
 								alert(data.message);
 							}
