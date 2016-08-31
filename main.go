@@ -37,5 +37,16 @@ func main() {
 		m.Post(k, v)
 	}
 
+	taskch := make(chan Task, 1)
+
+	tm := NewTaskManager(SS_DIR)
+	err := tm.Run(taskch)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer tm.Stop()
+	m.Map(taskch)
+	m.Map(tm)
+
 	log.Fatal(http.ListenAndServe(":5555", m))
 }

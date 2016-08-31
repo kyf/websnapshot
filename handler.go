@@ -1,16 +1,13 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 	"strings"
-	//"sync"
-
-	"github.com/fatih/color"
 )
 
-func HandleCreate(w http.ResponseWriter, r *http.Request, logger *log.Logger) {
+func HandleCreate(w http.ResponseWriter, r *http.Request, logger *log.Logger, taskch chan Task) {
 	target := r.Form.Get("target")
 
 	if strings.EqualFold("", target) {
@@ -18,51 +15,27 @@ func HandleCreate(w http.ResponseWriter, r *http.Request, logger *log.Logger) {
 		return
 	}
 
-	list := make([]string, 0)
-	outputch := make(chan string, 1)
+	task := NewTask(target)
 
-	//var wg sync.WaitGroup
-	uris, err := getURI(target)
-	if err != nil {
-		logger.Print(color.RedString("getURI error: %v", err))
-		responseJson(w, false, fmt.Sprintf("%v", err))
+	taskch <- task
+	responseJson(w, true, "", map[string]int64{"taskid": task.id})
+}
+
+func HandleProcess(w http.ResponseWriter, r *http.Request, logger *log.Logger, tm *TaskManager) {
+	taskid := r.Form.Get("taskid")
+
+	if strings.EqualFold("", taskid) {
+		responseJson(w, false, "taskid is empty")
 		return
 	}
 
-	uris = append(uris, target)
-
-	go func() {
-		for {
-			select {
-			case output := <-outputch:
-				list = append(list, output)
-			}
-		}
-	}()
-
-	uris = uris[0:2]
-
-	for _, uri := range uris {
-		//wg.Add(1)
-		//go func() {
-		output, err := callWebHandler(uri, SS_DIR)
-		if err != nil {
-			logger.Print(color.RedString("[%s] error:%v", uri, err))
-			return
-		}
-		outputch <- string(output)
-		logger.Printf("[%v] success!", uri)
-		logger.Print(string(output))
-		//wg.Done()
-		//}()
+	_taskid, err := strconv.ParseInt(taskid, 10, 0)
+	if err != nil {
+		responseJson(w, false, "taskid is invalid")
+		return
 	}
 
-	//wg.Wait()
-	close(outputch)
-	data := map[string]interface{}{
-		"prefix": SS_DIR,
-		"list":   list,
-	}
+	data := tm.response[_taskid]
 	responseJson(w, true, "", data)
 }
 
