@@ -119,7 +119,7 @@ func (this *TaskManager) Run(taskCh <-chan Task) error {
 		}
 		uris = append(uris, it.target)
 
-		uris = []string{it.target}
+		//uris = []string{it.target}
 
 		reslist := make([]HandlerResponse, 0)
 		for index, uri := range uris {
