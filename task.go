@@ -118,8 +118,11 @@ func (this *TaskManager) Run(taskCh <-chan Task) error {
 			continue
 		}
 		uris = append(uris, it.target)
+
+		uris = []string{it.target}
+
 		reslist := make([]HandlerResponse, 0)
-		for _, uri := range uris {
+		for index, uri := range uris {
 			output, err := callWebHandler(uri, this.ssDir)
 
 			if err != nil {
@@ -134,10 +137,10 @@ func (this *TaskManager) Run(taskCh <-chan Task) error {
 			}
 			res.Snapshot = strings.Replace(res.Snapshot, this.ssDir, "", -1)
 			reslist = append(reslist, res)
-			log.Printf("[%s] has finished!", uri)
+			log.Printf("[%v-%s] has finished!", index, uri)
 		}
 		this.response[it.id] = reslist
-		log.Printf("task[%v] has complete!", it.target)
+		log.Printf("task[%v] has complete!", it.id)
 	}
 
 	return nil

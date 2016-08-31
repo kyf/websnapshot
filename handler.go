@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -18,7 +19,7 @@ func HandleCreate(w http.ResponseWriter, r *http.Request, logger *log.Logger, ta
 	task := NewTask(target)
 
 	taskch <- task
-	responseJson(w, true, "", map[string]int64{"taskid": task.id})
+	responseJson(w, true, "", map[string]string{"taskid": fmt.Sprintf("%v", task.id)})
 }
 
 func HandleProcess(w http.ResponseWriter, r *http.Request, logger *log.Logger, tm *TaskManager) {
